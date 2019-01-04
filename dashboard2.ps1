@@ -34,10 +34,6 @@ $MyDashboard = New-UDDashboard -Title "My dashboard" -Content{
    #New-UDMonitor -Title "\FileSystem Disk Activity(*)\FileSystem Bytes Written" -Type Line -DataPointHistory 60 -RefreshInterval 5 -Endpoint{
     #   Get-Counter '\FileSystem Disk Activity(*)\FileSystem Bytes Written' -ErrorAction SilentlyContinue | Out-UDMonitorData
    #}
- 
-
-
-
    New-UDRow -Columns {              
     New-UDColumn -Size 6 {
         New-UdGrid -Title "Processes" -Headers @("Name", "ID", "Working Set", "CPU") -Properties @("Name", "Id", "WorkingSet", "CPU") -AutoRefresh -RefreshInterval 60 -Endpoint {
@@ -53,7 +49,21 @@ $MyDashboard = New-UDDashboard -Title "My dashboard" -Content{
              }  
            }
 }              
-}   
+}
+#disk io errors
+#disk usage
+#ram threshold
+#something using ram high for too long, kill that thread
+#network | if torrenting, dump to file and report to us
+#write all to database
+#set up thresholds
+#use thresholds to create reports
+#format reports to html and make pretty
+#influxdb for db
+#new dashboard for assets
+#new dashboard for wiki
+#dashboard for monitoring anything that SC cannot
+   
 
 New-UdGrid -Title "Disk" -Headers @("Name", "ID", "Working Set", "CPU") -Properties @("Name", "Id", "WorkingSet", "CPU") -AutoRefresh -RefreshInterval 60 -Endpoint {
    #(Get-Counter -List PhysicalDisk).PathsWithInstances | Out-UDGridData
@@ -62,9 +72,6 @@ New-UdGrid -Title "Disk" -Headers @("Name", "ID", "Working Set", "CPU") -Propert
 New-UdMonitor -Title "CPU (% processor time)" -Type Line -DataPointHistory 60 -RefreshInterval 5 -ChartBackgroundColor '#80FF6B63' -ChartBorderColor '#FFFF6B63'  -Endpoint {
     (Get-Counter -List PhysicalDisk).PathsWithInstances | Out-UDMonitorData 
 }
-
-
-
 }
 Start-UDDashboard -Port 10000 -Dashboard $MyDashboard
 

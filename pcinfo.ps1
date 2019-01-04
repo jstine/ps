@@ -1,0 +1,4 @@
+Get-WmiObject -Class Win32_BaseBoard | Select-Object PSComputerName,Description,Manufacturer,Model,Name,PartNumber
+Get-WmiObject -Class Win32_PhysicalMemory | Select-Object PSComputerName,Attributes,BankLabel,Capacity,Caption,ConfigureClockSpeed,ConfiguredVoltage,CreationClassName,Description,FormFactor,Manufacturer,MaxVoltage,MemoryType,MinVoltage,Model,Name,PartNumber,SerialNumber,SKU,Speed,Status,TypeDetail 
+ Format-List
+Get-WmiObject -ClassName Win32_logicaldisk | Select-Object PSComputerName,Description,DeviceID,FileSystem,FreeSpace,Size,Status,StatusInfo,VolumeName,VolumeSerialNumber | Format-List

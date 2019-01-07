@@ -1,3 +1,4 @@
+#import-module D:\Scripts\Powershell\influxdb.psm1
 $MyDashboard = New-UDDashboard -Title "My dashboard" -Content{
     New-UDCard -Title $env:COMPUTERNAME 
     New-UDRow -Columns {              
@@ -72,6 +73,61 @@ New-UdGrid -Title "Disk" -Headers @("Name", "ID", "Working Set", "CPU") -Propert
 New-UdMonitor -Title "CPU (% processor time)" -Type Line -DataPointHistory 60 -RefreshInterval 5 -ChartBackgroundColor '#80FF6B63' -ChartBorderColor '#FFFF6B63'  -Endpoint {
     (Get-Counter -List PhysicalDisk).PathsWithInstances | Out-UDMonitorData 
 }
+# do db stuff in here
+$Schedule = New-UDEndpointSchedule -Every 5 -Second
+$Endpoint = New-UDEndpoint -Schedule $Schedule -Endpoint {
+
+    $InfluxUrl = "http://localhost:8086/write?db=performance_data"
+    # convert from millisecnod to nanosecond
+    $TimeStamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds() * 1000000
+
+    $PerformanceStats = @(
+        '\Processor(_Total)\% Processor Time'
+        '\memory\% committed bytes in use'
+        '\physicaldisk(_total)\% disk time'
+    )
+
+    foreach($PerformanceStat in $PerformanceStats) {
+        $Value = 0
+        (Get-Counter $PerformanceStat).CounterSamples | ForEach-Object {
+            $Value += $_.CookedValue
+        }
+        Invoke-RestMethod -Method POST -Uri $InfluxUrl -Body "counter,host=$env:COMPUTERNAME,
+        counter=$($PerformanceStat.Replace(' ', '\ ')) value=$value $timestamp"
+    }
+
+
+}
+# query db for data
+$Data = Get-InfluxDb -Query 'SELECT * FROM counter WHERE time > now() - 5m GROUP by counter'
+
+# set up data for nivo chart - requires hashtable with x and y values for each point in chart
+$ChartData = @()
+
+foreach($series in $data){
+    $SeriesData = @{
+        id = $series.counter
+        data = @()
+    }
+}
+foreach($field in $Series.fields){
+    $SeriesData.data += @{
+        x = $field.time
+        y = $field.value
+    }
+}
+
+$ChartData += $SeriesData
+
+$BottomAxis = New-UdNivoChartAxisOptions -TickRotation 90
+New-UDNivoChart -Data $ChartData -Id "performanceStats" -Line -Responsive -MarginBottom 5 0 -MarginTop 50 -MarginRight 110 -Marginleft 60 -YScaleMax 100 -YScaleMin 0 -EnableArea -AxisBottom $BottomAxis -Colors 'paired'
+
+New-UDElement -Tag 'div' -Attributes @{ style = @{ "height" = '400px'}} -AutoRefresh -RefreshInterval 5 -Endpoint {
+    # Chart code ()
+}
+
+
+
 }
 Start-UDDashboard -Port 10000 -Dashboard $MyDashboard
 
